@@ -1,4 +1,4 @@
-FROM debian:jessie
+FROM debian:stable
 
 ENV SPLUNK_PRODUCT universalforwarder
 ENV SPLUNK_VERSION 7.1.1

@@ -15,6 +15,16 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN groupadd -r ${SPLUNK_GROUP} \
     && useradd -r -m -g ${SPLUNK_GROUP} ${SPLUNK_USER}
 
+# install Java 8
+RUN apt-get update && apt-get install -y mc gnupg software-properties-common \
+    && echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee /etc/apt/sources.list.d/webupd8team-java.list \
+    && echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list.d/webupd8team-java.list \
+    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886 \
+    && apt-get update && apt-get install -y oracle-java8-installer \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME /usr/lib/jvm/java-8-oracle/jre
+
 # make the "en_US.UTF-8" locale so splunk will be utf-8 enabled by default
 RUN apt-get update  && apt-get install -y --no-install-recommends apt-utils && apt-get install -y locales && rm -rf /var/lib/apt/lists/* \
     && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
@@ -42,6 +52,10 @@ RUN apt-get update && apt-get install -y wget sudo \
     && rm -rf /var/lib/apt/lists/*
 
 COPY entrypoint.sh /sbin/entrypoint.sh
+
+# copy jdbc drivers
+COPY ../drivers /var/opt/splunk/drivers
+
 RUN chmod +x /sbin/entrypoint.sh
 
 # Copy new license

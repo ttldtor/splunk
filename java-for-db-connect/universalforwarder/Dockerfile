@@ -1,9 +1,9 @@
 FROM debian:stable
 
-ENV SPLUNK_PRODUCT splunk
+ENV SPLUNK_PRODUCT universalforwarder
 ENV SPLUNK_VERSION 7.1.1
 ENV SPLUNK_BUILD 8f0ead9ec3db
-ENV SPLUNK_FILENAME splunk-${SPLUNK_VERSION}-${SPLUNK_BUILD}-Linux-x86_64.tgz
+ENV SPLUNK_FILENAME splunkforwarder-${SPLUNK_VERSION}-${SPLUNK_BUILD}-Linux-x86_64.tgz
 
 ENV SPLUNK_HOME /opt/splunk
 ENV SPLUNK_GROUP splunk
@@ -15,13 +15,24 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN groupadd -r ${SPLUNK_GROUP} \
     && useradd -r -m -g ${SPLUNK_GROUP} ${SPLUNK_USER}
 
+# install Java 8
+RUN apt-get update && apt-get install -y mc gnupg software-properties-common \
+    && echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee /etc/apt/sources.list.d/webupd8team-java.list \
+    && echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list.d/webupd8team-java.list \
+    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886 \
+    && apt-get update && apt-get install -y oracle-java8-installer \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME /usr/lib/jvm/java-8-oracle/jre
+
 # make the "en_US.UTF-8" locale so splunk will be utf-8 enabled by default
-RUN apt-get update  && apt-get install -y --no-install-recommends apt-utils && apt-get install -y locales && rm -rf /var/lib/apt/lists/* \
+#RUN apt-get update && apt-get install -y locales \
+#    && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
+#ENV LANG en_US.utf8
+
+RUN apt-get update && apt-get install -y locales && rm -rf /var/lib/apt/lists/* \
     && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 ENV LANG en_US.utf8
-
-# pdfgen dependency
-RUN apt-get update && apt-get install -y libgssapi-krb5-2 && rm -rf /var/lib/apt/lists/*
 
 # Download official Splunk release, verify checksum and unzip in /opt/splunk
 # Also backup etc folder, so it will be later copied to the linked volume
@@ -42,17 +53,18 @@ RUN apt-get update && apt-get install -y wget sudo \
     && rm -rf /var/lib/apt/lists/*
 
 COPY entrypoint.sh /sbin/entrypoint.sh
+
+# copy jdbc drivers
+COPY ../drivers /var/opt/splunk/drivers
+
 RUN chmod +x /sbin/entrypoint.sh
 
-# Copy new license
-#COPY ./Splunk_Enterprise_Q3FY17.lic /var/opt/splunk/etc/licenses/download-trial/Splunk_Enterprise_Q3FY17.lic
-
-# Ports Splunk Web, Splunk Daemon, KVStore, Splunk Indexing Port, Network Input, HTTP Event Collector
-EXPOSE 8000/tcp 8089/tcp 8191/tcp 9997/tcp 1514 8088/tcp 6514
+# Ports Splunk Daemon, Network Input, HTTP Event Collector
+EXPOSE 8089/tcp 1514 8088/tcp
 
 WORKDIR /opt/splunk
 
-# Configurations folder, var folder for everything (indexes, logs, kvstore)
+# Configurations folder, var folder for everyting (indexes, logs, kvstore)
 VOLUME [ "/opt/splunk/etc", "/opt/splunk/var" ]
 
 ENTRYPOINT ["/sbin/entrypoint.sh"]
