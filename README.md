@@ -1,5 +1,8 @@
 # splunk
 
+Version: 7.1.1
+Build: 8f0ead9ec3db
+
 Enterprise:
 ```console
 docker run -d -env SPLUNK_START_ARGS="--accept-license --answer-yes --seed-passwd changeme" -e "SPLUNK_USER=root" -p "8000:8000" ttldtor/splunk:enterprise:latest
