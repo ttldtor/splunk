@@ -57,7 +57,7 @@ RUN apt-get update && apt-get install -y wget sudo \
 COPY entrypoint.sh /sbin/entrypoint.sh
 
 # copy jdbc drivers
-COPY ../drivers /var/opt/splunk/drivers
+COPY drivers /var/opt/splunk/drivers
 
 RUN chmod +x /sbin/entrypoint.sh
 
