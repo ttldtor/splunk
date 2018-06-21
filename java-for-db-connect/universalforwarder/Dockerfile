@@ -1,4 +1,4 @@
-FROM debian:stable
+FROM openjdk:8-jre-slim
 
 ENV SPLUNK_PRODUCT universalforwarder
 ENV SPLUNK_VERSION 7.1.1
@@ -15,20 +15,6 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN groupadd -r ${SPLUNK_GROUP} \
     && useradd -r -m -g ${SPLUNK_GROUP} ${SPLUNK_USER}
 
-# install Java 8
-# install Java 8
-RUN apt-get update && apt-get install -y mc gnupg software-properties-common \
-    && echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee /etc/apt/sources.list.d/webupd8team-java.list \
-    && echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list.d/webupd8team-java.list \
-    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886 \
-    && apt-get update \
-    && echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections \
-    && echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections \
-    && apt-get install -y oracle-java8-installer \
-    && rm -rf /var/lib/apt/lists/*
-
-ENV JAVA_HOME /usr/lib/jvm/java-8-oracle/jre
-
 # make the "en_US.UTF-8" locale so splunk will be utf-8 enabled by default
 #RUN apt-get update && apt-get install -y locales \
 #    && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
@@ -40,7 +26,7 @@ ENV LANG en_US.utf8
 
 # Download official Splunk release, verify checksum and unzip in /opt/splunk
 # Also backup etc folder, so it will be later copied to the linked volume
-RUN apt-get update && apt-get install -y wget sudo \
+RUN apt-get update && apt-get install -y wget sudo screen mc \
     && mkdir -p ${SPLUNK_HOME} \
     && wget -qO /tmp/${SPLUNK_FILENAME} https://download.splunk.com/products/${SPLUNK_PRODUCT}/releases/${SPLUNK_VERSION}/linux/${SPLUNK_FILENAME} \
     && wget -qO /tmp/${SPLUNK_FILENAME}.md5 https://download.splunk.com/products/${SPLUNK_PRODUCT}/releases/${SPLUNK_VERSION}/linux/${SPLUNK_FILENAME}.md5 \
