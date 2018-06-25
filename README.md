@@ -1,8 +1,8 @@
 # splunk
 
-Version: 7.1.1
+Version: 7.1.0
 
-Build: 8f0ead9ec3db
+Build: 2e75b3406c5b
 
 Enterprise:
 ```console
