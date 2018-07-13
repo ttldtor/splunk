@@ -1,4 +1,4 @@
-FROM debian:stable
+FROM debian:stretch-slim
 
 ENV SPLUNK_PRODUCT universalforwarder
 ENV SPLUNK_VERSION 7.1.2
@@ -21,12 +21,12 @@ RUN groupadd -r ${SPLUNK_GROUP} \
 #ENV LANG en_US.utf8
 
 RUN apt-get update && apt-get install -y locales && rm -rf /var/lib/apt/lists/* \
-    && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
+    && ln -s /etc/locale.alias /usr/share/locale/locale.alias && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 ENV LANG en_US.utf8
 
 # Download official Splunk release, verify checksum and unzip in /opt/splunk
 # Also backup etc folder, so it will be later copied to the linked volume
-RUN apt-get update && apt-get install -y wget sudo \
+RUN apt-get update && apt-get install -y wget sudo procps openssl \
     && mkdir -p ${SPLUNK_HOME} \
     && wget -qO /tmp/${SPLUNK_FILENAME} https://download.splunk.com/products/${SPLUNK_PRODUCT}/releases/${SPLUNK_VERSION}/linux/${SPLUNK_FILENAME} \
     && wget -qO /tmp/${SPLUNK_FILENAME}.md5 https://download.splunk.com/products/${SPLUNK_PRODUCT}/releases/${SPLUNK_VERSION}/linux/${SPLUNK_FILENAME}.md5 \
